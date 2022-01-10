@@ -4,20 +4,26 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const fps = 60;
 
-class Scene {
+class Universe {
     constructor() {
         
     }
+}
 
+class View {
+    constructor() {
+        
+    }
+    
     clear() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
 
 class Orb {
-    constructor(position, size) {
+    constructor(position, radius) {
         this.position = position;
-        this.size = size;
+        this.radius = radius;
         this.acceleration = {
             x: 0,
             y: 0
@@ -29,14 +35,12 @@ class Orb {
         this.gravity = this.size ** 2 * Math.PI;
     }
 
-    getGravity() {
-        return this.gravity;
-    }
+    
 }
 
 class Star extends Orb {
-    constructor() {
-        super();
+    constructor(position, radius) {
+        super(position, radius);
     }
 }
 
@@ -174,12 +178,13 @@ class Player {
     }
 }
 
-const scene = new Scene();
+const universe = new Universe();
 const player = new Player();
+const view = new View();
 
 const update = () => {
     player.getDirection();
-    scene.clear();
+    view.clear();
     player.draw();
     setTimeout(() => {
         requestAnimationFrame(update);
