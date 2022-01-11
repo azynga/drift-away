@@ -13,22 +13,19 @@ class Universe {
     constructor() {
         this.defaultGravity = 3e-4;
         this.gravityConstant = this.defaultGravity;
-
         this.colors = {
             background: 'rgba(0, 0, 34, 1)',
-            primary: 'rgba(200, 160, 230, 1)'
-        }
-
+            primary: 'rgba(200, 160, 230, 1)',
+            star: 'rgba(250, 130, 130, 1)'
+        };
         this.firstStarPosition = {
             x: canvas.width / 2,
             y: canvas.height / 2
         };
-
         this.playerStartPosition = {
             x: this.firstStarPosition.x,
-            y: this.firstStarPosition.y + 100
-        }
-
+            y: this.firstStarPosition.y + 150
+        };
         this.orbs = [];
     }
 
@@ -36,9 +33,33 @@ class Universe {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    draw() {
+    drawBackground(viewOffset) {
+        for(let x = -canvas.width; x < 2 * canvas.width; x += 40) {
+            for(let y = -canvas.height; y < 2 * canvas.height; y += 40) {
+                const drawPosition = {
+                    x: x - viewOffset.x % canvas.width,
+                    y: y - viewOffset.y % canvas.height 
+                }
+                ctx.fillRect(drawPosition.x, drawPosition.y, 1, 1);
+            }
+        }
+    }
+
+    drawSelf() {
+        const drawAnchor = {
+            x: player.position.x - viewCenter.x,
+            y: player.position.y - viewCenter.y
+        };
+
         ctx.fillStyle = this.colors.primary;
         ctx.strokeStyle = this.colors.primary;
+
+        this.drawBackground(drawAnchor);
+
+        // this.drawBackground({
+        //     x: drawAnchor.x - canvas.width,
+        //     y: drawAnchor.y - canvas.height
+        // });
 
         // draw instructions
         ctx.font = 'bold 12px sans-serif';
@@ -48,10 +69,7 @@ class Universe {
         
         // draw game objects
         this.orbs.forEach(orb => {
-            orb.drawSelf({
-                x: player.position.x - viewCenter.x,
-                y: player.position.y - viewCenter.y
-            });
+            orb.drawSelf(drawAnchor);
         })
     }
 };
@@ -78,7 +96,7 @@ class Orb {
             x: this.position.x - viewOffset.x,
             y: this.position.y - viewOffset.y
         }
-        ctx.fillStyle = universe.colors.primary;
+        ctx.fillStyle = universe.colors.star;
         ctx.strokeStyle = universe.colors.primary;
         ctx.beginPath();
         ctx.arc(drawPosition.x, drawPosition.y, this.radius, 0, 2 * Math.PI);
@@ -180,9 +198,9 @@ class Player extends Orb {
     constructor(position, radius) {
         super(position, radius);
         this.trailParticles = [];
-        this.velocity = {
-            x: 1,
-            y: 0
+        this.velocity = { // test values
+            x: 2,
+            y: -0.5
         };
         this.abilityActive = false;
     }
@@ -238,20 +256,24 @@ class Player extends Orb {
             ctx.fillStyle = `rgba(200, 160, 230, ${opacity})`;
             ctx.fillRect(drawPosition.x - thickness / 2, drawPosition.y - thickness / 2, thickness, thickness);
         });
-
     }
 }
 
 const universe = new Universe();
+
+// test setup
 universe.orbs.push(
     new Player(universe.playerStartPosition, 15),
-    new Star(universe.firstStarPosition, 35, false)
+    new Star(universe.firstStarPosition, 35, false),
+    new Star({x: 950, y: 1250}, 80, true)
 );
+universe.orbs[1].velocity.x = 1.1;
+
 const player = universe.orbs[0];
 
 const update = () => {
     universe.clear();
-    universe.draw();
+    universe.drawSelf();
     setTimeout(() => {
         requestAnimationFrame(update);
     }, 1000 / fps)
