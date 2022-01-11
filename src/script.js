@@ -4,88 +4,86 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const fps = 60;
 
+
 class Universe {
     constructor() {
-        
-    }
-}
-
-class View {
-    constructor() {
-        
-    }
-    
-    clear() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-}
-
-class Orb {
-    constructor(position, radius) {
-        this.position = position;
-        this.radius = radius;
-        this.acceleration = {
-            x: 0,
-            y: 0
-        };
-        this.speed = {
-            x: 0,
-            y: 0
+        this.defaultGravity = 3e-4;
+        this.gravityConstant = this.defaultGravity;
+        this.colors = {
+            background: 'rgba(0, 0, 34, 1)',
+            primary: 'rgba(200, 160, 230, 1)'
         }
-        this.gravity = this.size ** 2 * Math.PI;
-    }
 
-    
-}
-
-class Star extends Orb {
-    constructor(position, radius) {
-        super(position, radius);
-    }
-}
-
-class Player {
-    constructor() {
-        this.starPosition = {
+        this.firstStarPosition = {
             x: canvas.width / 2,
             y: canvas.height / 2
         };
-        this.starGravity = 80;
-        this.starRadius = 40;
 
-        this.radius = 10;
-        this.position = {
-            x: this.starPosition.x,
-            y: this.starPosition.y + 100
+        this.playerStartPosition = {
+            x: this.firstStarPosition.x,
+            y: this.firstStarPosition.y + 100
         }
-        this.trailPixels = [{...this.position}];
+
+        this.orbs = [];
+    }
+
+    clear() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    draw() {
+        ctx.fillStyle = this.colors.primary;
+        ctx.strokeStyle = this.colors.primary;
+
+        // draw instructions
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('[Space]: Zero Gravity', 30, 40);
+        ctx.fillText('[Command]: Double Gravity', 30, 60);
+        ctx.fillText('[Option]: Reverse Gravity', 30, 80);
+        
+        // draw game objects
+        this.orbs.forEach(orb => {
+            orb.drawSelf();
+        })
+    }
+};
+
+class Orb {
+    constructor(position, radius, fixed = false) {
+        this.position = position;
+        this.radius = radius;
+        this.fixed = fixed;
         this.acceleration = {
             x: 0,
             y: 0
         };
-        this.speed = {
-            x: 1,
-            y: 0
-        };
-        this.direction = this.getDirection();
-        this.abilityActive = false;
+        this.velocity = {
+            x: (Math.random() - 0.5) / 5,
+            y: (Math.random() - 0.5) / 5
+        }
+        this.mass = (4/3) * Math.PI * this.radius ** 3;
     }
 
-    getDirection() {
-        // const coordinateDiff = {
-        //     x: this.position.x - this.trailPixels[1].x,
-        //     y: this.position.y - this.trailPixels[1].y
-        // };
-        
-        const angle = Math.atan2(this.speed.y, this.speed.x);
-        console.log(angle)
-        return angle;
+    drawSelf() {
+        this.setNextCoordinates();
+        ctx.fillStyle = universe.colors.primary;
+        ctx.strokeStyle = universe.colors.primary;
+        ctx.beginPath();
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
     }
 
-    getRelation() {
+    getCurrentDirection() {
+        const direction = Math.atan2(this.velocity.y, this.velocity.x);
+        return direction;
+    }
+
+    getRelation(otherObject) {
         const coordinateDiff = {
-            x: this.starPosition.x - this.position.x,
-            y: this.starPosition.y - this.position.y
+            x: otherObject.position.x - this.position.x,
+            y: otherObject.position.y - this.position.y
         };
     
         const distance = Math.sqrt(coordinateDiff.x ** 2 + coordinateDiff.y ** 2);
@@ -97,35 +95,46 @@ class Player {
         return relation;
     }
 
-    setGravity() {
-        const angle = this.getRelation().angle;
-        const distance = this.getRelation().distance;
-        const GRAVITATIONAL_CONSTANT = 6.67e-11;
-        const gravity = {
-            x: (Math.cos(angle) * this.starGravity) * 0.004 * (this.radius ** 2 * Math.PI) / distance ** 2,
-            y: (Math.sin(angle) * this.starGravity) * 0.004 * (this.radius ** 2 * Math.PI) / distance ** 2
+    getAcceleration(otherObject) {
+        if(otherObject === this) { // no acceleration if both objects are the same
+            return {
+                x: 0,
+                y: 0
+            }
+        }
+        const angle = this.getRelation(otherObject).angle;
+        const distance = this.getRelation(otherObject).distance;
+        const gravity = (universe.gravityConstant * this.mass * otherObject.mass) / distance ** 2;
+        const acceleration = {
+            x: Math.cos(angle) * gravity,
+            y: Math.sin(angle) * gravity
         };
-        this.acceleration.x = gravity.x;
-        this.acceleration.y = gravity.y;
+        return acceleration;
     }
 
     applyAcceleration() {
-        this.setGravity();
-        this.speed.x += this.acceleration.x;
-        this.speed.y += this.acceleration.y;
+        const orbs = universe.orbs;
+        const accCollection = orbs.map(orb => {
+            return this.getAcceleration(orb);
+        });
+        
+        const accSum = accCollection.reduce((accSum, orbAcc) => {
+            return {
+                x: accSum.x + orbAcc.x,
+                y: accSum.y + orbAcc.y
+            };
+        }, { x: 0, y: 0 });
 
-        ctx.beginPath();
-        ctx.moveTo(this.position.x, this.position.y);
-        ctx.lineTo(
-            this.position.x + this.acceleration.x * 8000,
-            this.position.y + this.acceleration.y * 8000
-        );
-        ctx.stroke();
+        this.acceleration.x = (accSum.x / this.mass);
+        this.acceleration.y = (accSum.y / this.mass);
+
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
     }
 
-    collision() {
-        const distance = this.getRelation().distance;
-        if(distance < this.starRadius + this.radius) {
+    collision(otherObject) {
+        const distance = this.getRelation(otherObject).distance;
+        if(distance < otherObject + this.radius) {
             return true;
         } else {
             return false;
@@ -133,15 +142,50 @@ class Player {
     }
 
     setNextCoordinates() {
-        this.applyAcceleration();
-        if(this.collision()) {
-            this.speed = { x: 0, y: 0};
-        } else {
-            this.speed.x += this.acceleration.x / 100;
-            this.speed.y += this.acceleration.y / 100;
+        if(this.fixed) {
+            return;
         }
-        this.position.x += this.speed.x;
-        this.position.y += this.speed.y;
+
+        this.applyAcceleration();
+        // if(this.collision(universe.orbs[1])) {
+        //     this.velocity = { x: 0, y: 0};
+        // } else {
+            this.velocity.x += this.acceleration.x;
+            this.velocity.y += this.acceleration.y;
+        // }
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
+};
+
+class Star extends Orb {
+    constructor(position, radius, fixed) {
+        super(position, radius, fixed);
+    }
+}
+
+class Player extends Orb {
+    constructor(position, radius) {
+        super(position, radius);
+        this.trailPixels = [];
+        this.velocity = {
+            x: 1,
+            y: 0
+        };
+        this.abilityActive = false;
+    }
+
+    setNextCoordinates() {
+        this.applyAcceleration();
+
+        // if(this.collision(universe.orbs[1])) {
+        //     this.velocity = { x: 0, y: 0};
+        // } else {
+            this.velocity.x += this.acceleration.x;
+            this.velocity.y += this.acceleration.y;
+        // }
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
 
         player.trailPixels.unshift({...player.position});
         if(player.trailPixels.length > 1200) {
@@ -149,43 +193,45 @@ class Player {
         };
     }
     
-    draw() {
-        const drawTrail = () => {
-            player.trailPixels.forEach((position, index) => {
-                const opacity = 0.4 - (index / (player.trailPixels.length * 2));
-                const size = 2;
-                ctx.fillStyle = `rgba(200, 160, 230, ${opacity})`;
-                ctx.fillRect(position.x-size/2, position.y-size/2, size, size);
-            });
-        }
-
+    drawSelf() {
         this.setNextCoordinates();
-        drawTrail();
 
-        ctx.fillStyle = 'rgba(200, 160, 230, 1)';
-        ctx.strokeStyle = 'rgba(200, 160, 230, 1)';
-        // ctx.font = 'bold 12px sans-serif';
-        // ctx.fillText('Space: Zero Gravity for 2s', 30, 40);
-        // ctx.fillText('Command: Double Gravity for 2s', 30, 60);
-        // ctx.fillText('Option: Reverse Gravity for 2s', 30, 80);
+        // draw gravity indicator
         ctx.beginPath();
+        ctx.moveTo(this.position.x, this.position.y);
+        ctx.lineTo(
+            this.position.x + this.acceleration.x * 8000,
+            this.position.y + this.acceleration.y * 8000
+        );
+
+        // draw planet
+        ctx.moveTo(this.position.x, this.position.y);
         ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
-        ctx.moveTo(this.starPosition.x, this.starPosition.y);
-        ctx.arc(this.starPosition.x, this.starPosition.y, this.starRadius, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
         ctx.closePath();
+
+        // draw trail
+        player.trailPixels.forEach((position, index) => {
+            const opacity = 0.4 - (index / (player.trailPixels.length * 2));
+            const thickness = 2;
+            ctx.fillStyle = `rgba(200, 160, 230, ${opacity})`;
+            ctx.fillRect(position.x - thickness / 2, position.y - thickness / 2, thickness, thickness);
+        });
+
     }
 }
 
 const universe = new Universe();
-const player = new Player();
-const view = new View();
+universe.orbs.push(
+    new Player(universe.playerStartPosition, 10),
+    new Star(universe.firstStarPosition, 35, false)
+);
+const player = universe.orbs[0];
 
 const update = () => {
-    player.getDirection();
-    view.clear();
-    player.draw();
+    universe.clear();
+    universe.draw();
     setTimeout(() => {
         requestAnimationFrame(update);
     }, 1000 / fps)
@@ -196,28 +242,27 @@ update();
 document.addEventListener('keydown', (event) => {
     if(!player.abilityActive){
         const key = event.key;
-        const starGravity = player.starGravity;
         player.abilityActive = true;
         
         switch(key) {
             case ' ':
-                player.starGravity = 0;
+                universe.gravityConstant = 0;
                 setTimeout(() => {
-                    player.starGravity = starGravity;
+                    universe.gravityConstant = universe.defaultGravity;
                     player.abilityActive = false;
                 }, 2000);
                 break;
             case 'Meta':
-                player.starGravity *= 2;
+                universe.gravityConstant *= 3;
                 setTimeout(() => {
-                    player.starGravity = starGravity;
+                    universe.gravityConstant = universe.defaultGravity;
                     player.abilityActive = false;
                 }, 2000);
                 break;
             case 'Alt':
-                player.starGravity *= -1;
+                universe.gravityConstant *= -0.5;
                 setTimeout(() => {
-                    player.starGravity = starGravity;
+                    universe.gravityConstant = universe.defaultGravity;
                     player.abilityActive = false;
                 }, 2000);
                 break;
