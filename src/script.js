@@ -2,6 +2,10 @@ const canvas = document.querySelector('#canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+const viewCenter = {
+    x: canvas.width / 2,
+    y: canvas.height / 2
+};
 const fps = 60;
 
 
@@ -9,6 +13,7 @@ class Universe {
     constructor() {
         this.defaultGravity = 3e-4;
         this.gravityConstant = this.defaultGravity;
+
         this.colors = {
             background: 'rgba(0, 0, 34, 1)',
             primary: 'rgba(200, 160, 230, 1)'
@@ -43,7 +48,10 @@ class Universe {
         
         // draw game objects
         this.orbs.forEach(orb => {
-            orb.drawSelf();
+            orb.drawSelf({
+                x: player.position.x - viewCenter.x,
+                y: player.position.y - viewCenter.y
+            });
         })
     }
 };
@@ -64,12 +72,16 @@ class Orb {
         this.mass = (4/3) * Math.PI * this.radius ** 3;
     }
 
-    drawSelf() {
+    drawSelf(viewOffset) {
         this.setNextCoordinates();
+        const drawPosition = {
+            x: this.position.x - viewOffset.x,
+            y: this.position.y - viewOffset.y
+        }
         ctx.fillStyle = universe.colors.primary;
         ctx.strokeStyle = universe.colors.primary;
         ctx.beginPath();
-        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
+        ctx.arc(drawPosition.x, drawPosition.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
         ctx.closePath();
@@ -167,7 +179,7 @@ class Star extends Orb {
 class Player extends Orb {
     constructor(position, radius) {
         super(position, radius);
-        this.trailPixels = [];
+        this.trailParticles = [];
         this.velocity = {
             x: 1,
             y: 0
@@ -187,36 +199,44 @@ class Player extends Orb {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
 
-        player.trailPixels.unshift({...player.position});
-        if(player.trailPixels.length > 1200) {
-            player.trailPixels.pop();
+        player.trailParticles.unshift({...player.position});
+        if(player.trailParticles.length > 1200) {
+            player.trailParticles.pop();
         };
     }
     
-    drawSelf() {
+    drawSelf(viewOffset) {
         this.setNextCoordinates();
+        const drawPosition = {
+            x: this.position.x - viewOffset.x,
+            y: this.position.y - viewOffset.y
+        }
 
         // draw gravity indicator
         ctx.beginPath();
-        ctx.moveTo(this.position.x, this.position.y);
+        ctx.moveTo(drawPosition.x, drawPosition.y);
         ctx.lineTo(
-            this.position.x + this.acceleration.x * 8000,
-            this.position.y + this.acceleration.y * 8000
+            drawPosition.x + this.acceleration.x * 8000,
+            drawPosition.y + this.acceleration.y * 8000
         );
 
         // draw planet
-        ctx.moveTo(this.position.x, this.position.y);
-        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
+        ctx.moveTo(drawPosition.x, drawPosition.y);
+        ctx.arc(drawPosition.x, drawPosition.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
         ctx.closePath();
 
         // draw trail
-        player.trailPixels.forEach((position, index) => {
-            const opacity = 0.4 - (index / (player.trailPixels.length * 2));
+        player.trailParticles.forEach((position, index) => {
+            const drawPosition = {
+                x: position.x - viewOffset.x,
+                y: position.y - viewOffset.y
+            }
+            const opacity = 0.4 - (index / (player.trailParticles.length * 2));
             const thickness = 2;
             ctx.fillStyle = `rgba(200, 160, 230, ${opacity})`;
-            ctx.fillRect(position.x - thickness / 2, position.y - thickness / 2, thickness, thickness);
+            ctx.fillRect(drawPosition.x - thickness / 2, drawPosition.y - thickness / 2, thickness, thickness);
         });
 
     }
@@ -224,7 +244,7 @@ class Player extends Orb {
 
 const universe = new Universe();
 universe.orbs.push(
-    new Player(universe.playerStartPosition, 10),
+    new Player(universe.playerStartPosition, 15),
     new Star(universe.firstStarPosition, 35, false)
 );
 const player = universe.orbs[0];
