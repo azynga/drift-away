@@ -2,16 +2,18 @@ const canvas = document.querySelector('#canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-const viewCenter = {
+let viewCenter = {
     x: canvas.width / 2,
     y: canvas.height / 2
 };
-const fps = 60;
+
+const fps = 0; // 0: no framerate lock
 
 
 class Universe {
     constructor() {
-        this.defaultGravity = 3e-4;
+        this.controlsMessage = false;
+        this.defaultGravity = 6e-4;
         this.gravityConstant = this.defaultGravity;
         this.colors = {
             background: 'rgba(0, 0, 34, 1)',
@@ -34,11 +36,12 @@ class Universe {
     }
 
     drawBackground(viewOffset) {
-        for(let x = -canvas.width; x < 2 * canvas.width; x += 40) {
-            for(let y = -canvas.height; y < 2 * canvas.height; y += 40) {
+        const gridSize = 50;
+        for(let x = -gridSize; x < canvas.width + gridSize; x += gridSize) {
+            for(let y = -gridSize; y < canvas.height + gridSize; y += gridSize) {
                 const drawPosition = {
-                    x: x - viewOffset.x % canvas.width,
-                    y: y - viewOffset.y % canvas.height 
+                    x: x - viewOffset.x % gridSize,
+                    y: y - viewOffset.y % gridSize 
                 }
                 ctx.fillRect(drawPosition.x, drawPosition.y, 1, 1);
             }
@@ -56,16 +59,13 @@ class Universe {
 
         this.drawBackground(drawAnchor);
 
-        // this.drawBackground({
-        //     x: drawAnchor.x - canvas.width,
-        //     y: drawAnchor.y - canvas.height
-        // });
-
         // draw instructions
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('[Space]: Zero Gravity', 30, 40);
-        ctx.fillText('[Command]: Double Gravity', 30, 60);
-        ctx.fillText('[Option]: Reverse Gravity', 30, 80);
+        if(this.controlsMessage) {
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('[Space]: Zero Gravity', 30, 40);
+            ctx.fillText('[Command]: Double Gravity', 30, 60);
+            ctx.fillText('[Option]: Reverse Gravity', 30, 80);
+        };
         
         // draw game objects
         this.orbs.forEach(orb => {
@@ -75,7 +75,7 @@ class Universe {
 };
 
 class Orb {
-    constructor(position, radius, fixed = false) {
+    constructor(position, radius, density = 1, fixed = false) {
         this.position = position;
         this.radius = radius;
         this.fixed = fixed;
@@ -87,7 +87,9 @@ class Orb {
             x: (Math.random() - 0.5) / 5,
             y: (Math.random() - 0.5) / 5
         }
-        this.mass = (4/3) * Math.PI * this.radius ** 3;
+        this.volume = (4/3) * Math.PI * this.radius ** 3;
+        this.density = density;
+        this.mass = this.volume * this.density;
     }
 
     drawSelf(viewOffset) {
@@ -105,9 +107,14 @@ class Orb {
         ctx.closePath();
     }
 
-    getCurrentDirection() {
+    getCurrentMovement() {
         const direction = Math.atan2(this.velocity.y, this.velocity.x);
-        return direction;
+        const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
+        const currentMovement = {
+            direction: direction,
+            speed: speed
+        };
+        return currentMovement;
     }
 
     getRelation(otherObject) {
@@ -134,7 +141,8 @@ class Orb {
         }
         const angle = this.getRelation(otherObject).angle;
         const distance = this.getRelation(otherObject).distance;
-        const gravity = (universe.gravityConstant * this.mass * otherObject.mass) / distance ** 2;
+        let gravity = (universe.gravityConstant * this.mass * otherObject.mass) / distance ** 2;
+        
         const acceleration = {
             x: Math.cos(angle) * gravity,
             y: Math.sin(angle) * gravity
@@ -162,10 +170,16 @@ class Orb {
         this.velocity.y += this.acceleration.y;
     }
 
-    collision(otherObject) {
-        const distance = this.getRelation(otherObject).distance;
-        if(distance < otherObject + this.radius) {
-            return true;
+    checkCollision(otherObject) {
+        const {angle, distance} = this.getRelation(otherObject);
+        if(distance < otherObject.radius + this.radius && otherObject !== this) {
+            const {direction, speed} = this.getCurrentMovement();
+            const bounceAngle = direction + angle + Math.PI;
+            const bounceVelocity = {
+                x: Math.cos(bounceAngle) * speed * 0.9,
+                y: Math.sin(bounceAngle) * speed * 0.9
+            }
+            this.velocity = {...bounceVelocity};
         } else {
             return false;
         }
@@ -175,28 +189,22 @@ class Orb {
         if(this.fixed) {
             return;
         }
-
+        // universe.orbs.forEach(orb => this.checkCollision(orb));
         this.applyAcceleration();
-        // if(this.collision(universe.orbs[1])) {
-        //     this.velocity = { x: 0, y: 0};
-        // } else {
-            this.velocity.x += this.acceleration.x;
-            this.velocity.y += this.acceleration.y;
-        // }
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
     }
 };
 
 class Star extends Orb {
-    constructor(position, radius, fixed) {
-        super(position, radius, fixed);
+    constructor(position, radius, density = 1, fixed) {
+        super(position, radius, density,fixed);
     }
 }
 
 class Player extends Orb {
-    constructor(position, radius) {
-        super(position, radius);
+    constructor(position, radius, density) {
+        super(position, radius, density);
         this.trailParticles = [];
         this.velocity = { // test values
             x: 2,
@@ -207,13 +215,7 @@ class Player extends Orb {
 
     setNextCoordinates() {
         this.applyAcceleration();
-
-        // if(this.collision(universe.orbs[1])) {
-        //     this.velocity = { x: 0, y: 0};
-        // } else {
-            this.velocity.x += this.acceleration.x;
-            this.velocity.y += this.acceleration.y;
-        // }
+        // universe.orbs.forEach(orb => this.checkCollision(orb));
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
 
@@ -260,23 +262,54 @@ class Player extends Orb {
 }
 
 const universe = new Universe();
-
 // test setup
 universe.orbs.push(
-    new Player(universe.playerStartPosition, 15),
-    new Star(universe.firstStarPosition, 35, false),
-    new Star({x: 950, y: 1250}, 80, true)
+    new Player(universe.playerStartPosition, 20, 80),
+    //new Star(universe.firstStarPosition, 35, 3),
+    new Star({x: 950, y: 1250}, 130, 0.5)
 );
-universe.orbs[1].velocity.x = 1.1;
-
 const player = universe.orbs[0];
+const firstStar = universe.orbs[1];
+
+firstStar.velocity = { x: 1, y: 0 }
+
+    
+const randomStarProperties = () => {
+    return [
+        {
+            x: 950 + (Math.random() - 0.5) * 3200,
+            y: 1250 + (Math.random() - 0.5) * 2000
+        },
+        Math.random() + 0.5,
+        Math.random() * 10
+    ];
+}
+
+for(let i = 0; i < 300; i ++) {
+    universe.orbs.push(new Star(...randomStarProperties()));
+}
+// universe.orbs.push(new Star({x: 200, y: 200}, 80, false))
+
+// universe.orbs[1].velocity.x = 1.1;
+// player.velocity.x = 0.71;
+
 
 const update = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    viewCenter = {
+        x: canvas.width / 2,
+        y: canvas.height / 2
+    };
     universe.clear();
     universe.drawSelf();
-    setTimeout(() => {
+    if(fps) {
+        setTimeout(() => {
+            requestAnimationFrame(update);
+        }, 1000 / fps)
+    } else {
         requestAnimationFrame(update);
-    }, 1000 / fps)
+    }
 }
 
 update();
@@ -307,6 +340,10 @@ document.addEventListener('keydown', (event) => {
                     universe.gravityConstant = universe.defaultGravity;
                     player.abilityActive = false;
                 }, 2000);
+                break;
+            case 'c':
+                universe.controlsMessage = !universe.controlsMessage;
+                player.abilityActive = false;
                 break;
         };
     };
