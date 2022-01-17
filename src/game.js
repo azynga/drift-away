@@ -9,7 +9,7 @@ const universe = new Universe(
         {x: 200, y: 400},
         50,
         7,
-        true
+        false
     )
 );
 
@@ -42,8 +42,8 @@ const setup2 = () => {
     for(let i = 0; i < 400; i ++) {
         universe.orbs.push(new Star(...universe.generaterStarProperties(
             { x: 0, y: 0 }, // center position
-            2000, // spread width
-            1000, // spread height
+            4000, // spread width
+            2000, // spread height
             10, // max radius
             1 // max density
         )));
@@ -62,7 +62,7 @@ const setup3 = () => {
     }
 }
 
-setup3();
+setup2();
 
 const update = () => {
     if(!gamePaused) {

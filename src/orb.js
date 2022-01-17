@@ -72,6 +72,7 @@ class Orb {
         // Remove orb if gravitational influence is too low
         if(relevantGravity.length === 0 && universe.gravityConstant !== 0 && isOffScreen) {
             orbs.splice(orbs.indexOf(this), 1);
+            console.log('Orb removed because of low gravity influence')
         };
         
         const totalGravity = relevantGravity.reduce((totalGravity, orbGravity) => {
@@ -83,6 +84,11 @@ class Orb {
 
         this.acceleration.x = (totalGravity.x / this.mass);
         this.acceleration.y = (totalGravity.y / this.mass);
+
+        if(this.type === 'player' && this.fuel > 0) {
+            this.acceleration.x += this.boost.x;
+            this.acceleration.y += this.boost.y;
+        };
 
         this.velocity.x += this.acceleration.x;
         this.velocity.y += this.acceleration.y;
@@ -101,6 +107,13 @@ class Orb {
             this.mass += volumeDifference * this.density;
             this.volume += volumeDifference;
             this.radius = ((3 * this.volume) / (4 * Math.PI)) ** (1/3);
+
+            if(this.type === 'player') {
+                this.fuel += volumeDifference / 2000;
+                if(this.fuel > 1000) {
+                    this.fuel = 1000;
+                }
+            }
 
             if(otherObject.radius < 0.1) {
                 orbs.splice(orbs.indexOf(otherObject), 1);

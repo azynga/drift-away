@@ -121,9 +121,35 @@ class View {
         };
     }
 
+    drawFuelDisplay() {
+        const ctx = this.ctx;
+        const displaySize = {
+            width: this.canvas.width,
+            height: 3
+        };
+        ctx.beginPath();
+        ctx.strokeStyle = this.colors.primary(0.7);
+        ctx.strokeRect(
+            this.canvasCenter.x - displaySize.width / 2,
+            this.canvas.height - displaySize.height,
+            displaySize.width,
+            displaySize.height
+        );
+        ctx.fillStyle = this.colors.primary(0.8);
+        ctx.fillRect(
+            this.canvasCenter.x - displaySize.width / 2,
+            this.canvas.height - displaySize.height,
+            (displaySize.width / 1000) * player.fuel,
+            displaySize.height
+        )
+        ctx.stroke();
+        ctx.closePath();
+    }
+
     drawAll(orbsArray) {
         this.drawBackground();
         this.drawBatch(orbsArray);
+        this.drawFuelDisplay();
         this.drawControls();
     }
 

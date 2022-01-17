@@ -1,10 +1,10 @@
 class Universe {
     constructor(view, player, firstStar) {
-        this.defaultGravity = 6e-4;
+        this.defaultGravity = 3e-4;
         this.gravityConstant = this.defaultGravity;
         this.size = {
-            x: 20000,
-            y: 12000
+            x: 10000,
+            y: 6000
         };
         this.view = view;
         this.orbs = [player, firstStar];
@@ -24,7 +24,7 @@ class Universe {
         };
         const radius = Math.random() * maxRadius;
         const density = Math.random() * maxDensity;
-        const fixed = radius >= 40;
+        const fixed = radius >= 60;
         return [
             startPosition,
             radius,
