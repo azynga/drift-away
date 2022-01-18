@@ -125,7 +125,7 @@ class View {
         const ctx = this.ctx;
         const displaySize = {
             width: this.canvas.width,
-            height: 3
+            height: 5
         };
         ctx.beginPath();
         ctx.strokeStyle = this.colors.primary(0.7);
@@ -139,7 +139,7 @@ class View {
         ctx.fillRect(
             this.canvasCenter.x - displaySize.width / 2,
             this.canvas.height - displaySize.height,
-            (displaySize.width / 1000) * player.fuel,
+            (displaySize.width / player.maxFuel) * player.fuel,
             displaySize.height
         )
         ctx.stroke();

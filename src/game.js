@@ -39,7 +39,7 @@ const setup1 = () => {
 }
 
 const setup2 = () => {
-    for(let i = 0; i < 400; i ++) {
+    for(let i = 0; i < 300; i ++) {
         universe.orbs.push(new Star(...universe.generaterStarProperties(
             { x: 0, y: 0 }, // center position
             4000, // spread width

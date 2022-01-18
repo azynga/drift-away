@@ -5,29 +5,29 @@ class Player extends Orb {
         this.trailParticles = [{...position}];
         this.isAlive = true;
         this.boostPower = 0.05;
-        this.boost = { x: 0, y: 0};
-        this.fuel = 1000;
+        this.boostActive = false;
+        this.boost = { x: 0, y: 0 };
+        this.maxFuel = 1000;
+        this.fuel = 500;
     }
 
-    setBoost(direction) {
-        if(this.fuel > 0 && !gamePaused && this.isAlive) {
+    setBoost(direction, active) {
+        if(!gamePaused && this.isAlive) {
             switch(direction) {
                 case 'up':
-                    this.boost.y = -this.boostPower;
+                    this.boost.y = active ? -this.boostPower : 0;
                     break;
                 case 'down':
-                    this.boost.y = this.boostPower;
+                    this.boost.y = active ? this.boostPower : 0;
                     break;
                 case 'left':
-                    this.boost.x = -this.boostPower;
+                    this.boost.x = active ? -this.boostPower : 0;
                     break;
                 case 'right':
-                    this.boost.x = this.boostPower;
+                    this.boost.x = active ? this.boostPower : 0;
                     break;
             };
-            this.fuel -= 10;
+            this.boostActive = active;
         }
-
-        console.log(this.fuel)
     };
 }

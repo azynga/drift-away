@@ -41,7 +41,7 @@ class Orb {
         return relation;
     }
 
-    getGravitationalPull(otherObject) {
+    getSingleGravitationalPull(otherObject) {
         if(otherObject === this) { // No acceleration if both objects are the same
             return {
                 x: 0,
@@ -61,10 +61,10 @@ class Orb {
         return gravitationalPull;
     }
 
-    applyGravity() {
+    getTotalGravitationalPull() {
         const orbs = universe.orbs;
         const gravityCollection = orbs.map(orb => {
-            return this.getGravitationalPull(orb);
+            return this.getSingleGravitationalPull(orb);
         });
         const isOffScreen = universe.view.isOffScreen(this);
         const relevantGravity = gravityCollection.filter(gravity => gravity.sum > 0.001);
@@ -74,20 +74,50 @@ class Orb {
             orbs.splice(orbs.indexOf(this), 1);
             console.log('Orb removed because of low gravity influence')
         };
-        
-        const totalGravity = relevantGravity.reduce((totalGravity, orbGravity) => {
+
+        const totalGravity = relevantGravity.reduce((totalGravity, singleGravity) => {
             return {
-                x: totalGravity.x + orbGravity.x,
-                y: totalGravity.y + orbGravity.y
+                x: totalGravity.x + singleGravity.x,
+                y: totalGravity.y + singleGravity.y
             };
         }, { x: 0, y: 0 });
+
+        return {
+            x: totalGravity.x,
+            y: totalGravity.y,
+            sum: Math.sqrt(totalGravity.x ** 2 + totalGravity.y ** 2)
+        };
+    }
+
+    applyGravity() {
+        // const orbs = universe.orbs;
+        // const gravityCollection = orbs.map(orb => {
+        //     return this.getSingleGravitationalPull(orb);
+        // });
+        // const isOffScreen = universe.view.isOffScreen(this);
+        // const relevantGravity = gravityCollection.filter(gravity => gravity.sum > 0.001);
+
+        // // Remove orb if gravitational influence is too low
+        // if(relevantGravity.length === 0 && universe.gravityConstant !== 0 && isOffScreen) {
+        //     orbs.splice(orbs.indexOf(this), 1);
+        //     console.log('Orb removed because of low gravity influence')
+        // };
+        
+        // const totalGravity = relevantGravity.reduce((totalGravity, orbGravity) => {
+        //     return {
+        //         x: totalGravity.x + orbGravity.x,
+        //         y: totalGravity.y + orbGravity.y
+        //     };
+        // }, { x: 0, y: 0 });
+        const totalGravity = this.getTotalGravitationalPull();
 
         this.acceleration.x = (totalGravity.x / this.mass);
         this.acceleration.y = (totalGravity.y / this.mass);
 
-        if(this.type === 'player' && this.fuel > 0) {
+        if(this.type === 'player' && this.boostActive && this.fuel > 0) {
             this.acceleration.x += this.boost.x;
             this.acceleration.y += this.boost.y;
+            this.fuel -= 1;
         };
 
         this.velocity.x += this.acceleration.x;
@@ -101,17 +131,17 @@ class Orb {
         const isMoreMassive = this.mass > otherObject.mass;
         if(overlap > 0 && isMoreMassive) {
             otherObject.radius -= overlap;
-            const previewsVolume = otherObject.volume;
+            const previousVolume = otherObject.volume;
             const newVolume = (4/3) * Math.PI * otherObject.radius ** 3;
-            const volumeDifference = previewsVolume - newVolume;
+            const volumeDifference = previousVolume - newVolume;
             this.mass += volumeDifference * this.density;
             this.volume += volumeDifference;
             this.radius = ((3 * this.volume) / (4 * Math.PI)) ** (1/3);
 
             if(this.type === 'player') {
-                this.fuel += volumeDifference / 2000;
-                if(this.fuel > 1000) {
-                    this.fuel = 1000;
+                this.fuel += volumeDifference / 1000;
+                if(this.fuel > this.maxFuel) {
+                    this.fuel = this.maxFuel;
                 }
             }
 
