@@ -56,8 +56,8 @@ class View {
                 ctx.fillRect(
                     x - this.viewOffset.x % gridSize,
                     y - this.viewOffset.y % gridSize,
-                    1,
-                    1
+                    1.5,
+                    1.5
                 );
             };
         };
