@@ -17,20 +17,30 @@ class Universe {
     //     }
     // }
 
-    generaterStarProperties(center, areaWidth = this.size.x + 2000, areaHeight = this.size.y + 2000, maxRadius, maxDensity) {
+    generateStarProperties(center, areaWidth = this.size.x + 2000, areaHeight = this.size.y + 2000, maxRadius, maxDensity, spawnOffScreen) {
         const startPosition = {
             x: center.x + (Math.random() - 0.5) * areaWidth,
             y: center.y + (Math.random() - 0.5) * areaHeight
         };
         const radius = Math.random() * maxRadius;
-        const density = Math.random() * maxDensity;
+        const density = 7; //Math.random() * maxDensity;
         const fixed = radius >= 60;
-        return [
-            startPosition,
-            radius,
-            density,
-            fixed
-        ];
+        const orbDummy = {
+            position: startPosition,
+            radius: radius
+        }
+        
+        if(spawnOffScreen && !this.view.isOffScreen(orbDummy)) {
+            console.log('Create another star, because first attempt was on screen')
+            return this.generateStarProperties(...arguments);
+        } else {
+            return [
+                startPosition,
+                radius,
+                density,
+                fixed
+            ];
+        }
     }
 
     updatePositions() {

@@ -58,7 +58,7 @@ document.addEventListener('keydown', event => {
     const pressedKey = event.key;
     keys[pressedKey] = true;
     for(let key in keys) {
-        if(key in controls && keys[key] === true) {
+        if(gameStarted && key in controls && keys[key] === true) {
             controls[key](true);
         }
     }

@@ -8,7 +8,7 @@ class Player extends Orb {
         this.boostActive = false;
         this.boost = { x: 0, y: 0 };
         this.maxFuel = 1000;
-        this.fuel = 500;
+        this.fuel = 1000;
     }
 
     setBoost(direction, active) {

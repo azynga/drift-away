@@ -9,6 +9,7 @@ class View {
             y: canvas.height / 2
         };
         this.fps = 0; // 0: No framerate lock
+        this.frameCount = 0;
         this.drawAnchor = {
             x: 0,
             y: 0
@@ -114,19 +115,18 @@ class View {
 
     drawControls() {
         const ctx = this.ctx;
-        if(this.showControls) {
-            ctx.fillStyle = this.colors.primary(1);
-            
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textBaseline = 'top';
-            ctx.fillText('[ARROW KEYS]: BOOST', 30, 30);
-            ctx.fillText('[SPACE]: ZERO GRAVITY', 30, 50);
-            ctx.fillText('[SHIFT]: REVERSE GRAVITY', 30, 70);
+    
+        ctx.fillStyle = this.colors.primary(1);
 
-            ctx.font = 'bold 84px sans-serif';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
-        };
+        ctx.font = '12px sans-serif';
+        ctx.textBaseline = 'top';
+        ctx.fillText('[ARROW KEYS]: BOOST', 30, 30);
+        ctx.fillText('[SPACE]: ZERO GRAVITY', 30, 50);
+        ctx.fillText('[SHIFT]: REVERSE GRAVITY', 30, 70);
+
+        ctx.font = 'bold 84px sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
     }
 
     drawFuelDisplay() {
@@ -154,18 +154,61 @@ class View {
         ctx.closePath();
     }
 
+    drawStartScreen() {
+        const ctx = this.ctx;
+        const opacity = 1 / ((this.frameCount + 0.0001) / 6) ;
+        ctx.fillStyle = this.colors.primary(opacity);
+        
+        const margin = 100;
+        ctx.font = '12px sans-serif';
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
+        ctx.fillText('[ARROW KEYS]: BOOST', margin + 12, this.canvas.height - margin - 40);
+        ctx.fillText('[SPACE]: ZERO GRAVITY', margin + 12, this.canvas.height - margin - 20);
+        ctx.fillText('[SHIFT]: REVERSE GRAVITY', margin + 12, this.canvas.height - margin);
+
+        ctx.font = 'bold 150px sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        ctx.fillText('DRIFT', margin, this.canvasCenter.y, this.canvasCenter.x - margin);
+        ctx.textAlign = 'right';
+        ctx.fillText('AWAY', this.canvas.width - margin, this.canvasCenter.y, this.canvasCenter.x - margin);
+
+        ctx.font = '12px sans-serif';
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'right';
+        ctx.fillText('CLICK TO START THE GAME', this.canvas.width - margin - 12, this.canvas.height - margin);
+    };
+
+    drawInstructions() {
+        const ctx = this.ctx;
+        ctx.fillStyle = this.colors.primary((this.frameCount - 120) / 100);
+        ctx.font = '30px sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillText('Collect smaller stars and become the biggest.', this.canvasCenter.x, this.canvasCenter.y - 220);
+        ctx.fillText('Your boost is limited, don\'t waste it.', this.canvasCenter.x, this.canvasCenter.y - 170);
+    }
+
     drawAll(orbsArray) {
         const ctx = this.ctx;
+        
         if(gamePaused) {
-            ctx.filter = 'blur(5px)';
+            // ctx.filter = 'blur(5px)';
             this.drawBatch(orbsArray);
-            ctx.filter = 'none';
+            this.drawControls();
+            // ctx.filter = 'none';
         } else {
             this.drawBackground();
+            if(this.frameCount > 60 * 2 && this.frameCount < 60 * 8) {
+                this.drawInstructions();
+            }
             this.drawBatch(orbsArray);
             this.drawFuelDisplay();
+            if(this.frameCount < 300) {
+                this.drawStartScreen();
+            }
         }
-        this.drawControls();
     }
 
     isOffScreen(orb) {
