@@ -29,6 +29,7 @@ class View {
 
     clear() {
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // this.canvas.width = this.canvas.width;
     }
 
     updateViewPosition(drawAnchor) {
@@ -115,13 +116,16 @@ class View {
         const ctx = this.ctx;
         if(this.showControls) {
             ctx.fillStyle = this.colors.primary(1);
+            
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('[Arrow Keys]: Boost', 30, 40);
-            ctx.fillText('[Space]: Zero Gravity', 30, 60);
-            ctx.fillText('[Shift]: Reverse Gravity', 30, 80);
+            ctx.textBaseline = 'top';
+            ctx.fillText('[ARROW KEYS]: BOOST', 30, 30);
+            ctx.fillText('[SPACE]: ZERO GRAVITY', 30, 50);
+            ctx.fillText('[SHIFT]: REVERSE GRAVITY', 30, 70);
 
             ctx.font = 'bold 84px sans-serif';
-            ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y + 20, this.canvas.width);
+            ctx.textBaseline = 'middle';
+            ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
         };
     }
 

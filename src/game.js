@@ -13,6 +13,8 @@ const universe = new Universe(
     )
 );
 
+// console.dir(window.localStorage);
+
 const player = universe.orbs[0];
 const firstStar = universe.orbs[1];
 const fps = universe.view.fps;
