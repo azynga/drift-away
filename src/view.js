@@ -90,7 +90,8 @@ class View {
 
     drawBatch(orbsArray) {
         const ctx = this.ctx;
-        if(orbsArray[0].type === 'player') {
+        const orbsOnScreen = orbsArray.filter(orb => !orb.isOffScreen);
+        if(orbsOnScreen[0].type === 'player') {
             const player = orbsArray[0];
             ctx.beginPath();
             ctx.fillStyle = this.colors.player;
@@ -103,8 +104,8 @@ class View {
 
         ctx.beginPath();
         ctx.fillStyle = this.colors.star;
-        for(let i = 0; i < orbsArray.length; i ++) {
-            orbsArray[i].type !== 'player' && this.drawOrb(orbsArray[i])
+        for(let i = 0; i < orbsOnScreen.length; i ++) {
+            orbsOnScreen[i].type !== 'player' && this.drawOrb(orbsArray[i])
         }
         ctx.fill();
         ctx.closePath();
@@ -115,9 +116,12 @@ class View {
         if(this.showControls) {
             ctx.fillStyle = this.colors.primary(1);
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('[Space]: Zero Gravity', 30, 40);
-            ctx.fillText('[W]: High Gravity', 30, 60);
-            ctx.fillText('[S]: Reverse Gravity', 30, 80);
+            ctx.fillText('[Arrow Keys]: Boost', 30, 40);
+            ctx.fillText('[Space]: Zero Gravity', 30, 60);
+            ctx.fillText('[Shift]: Reverse Gravity', 30, 80);
+
+            ctx.font = 'bold 84px sans-serif';
+            ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y + 20, this.canvas.width);
         };
     }
 
@@ -147,17 +151,24 @@ class View {
     }
 
     drawAll(orbsArray) {
-        this.drawBackground();
-        this.drawBatch(orbsArray);
-        this.drawFuelDisplay();
+        const ctx = this.ctx;
+        if(gamePaused) {
+            ctx.filter = 'blur(5px)';
+            this.drawBatch(orbsArray);
+            ctx.filter = 'none';
+        } else {
+            this.drawBackground();
+            this.drawBatch(orbsArray);
+            this.drawFuelDisplay();
+        }
         this.drawControls();
     }
 
     isOffScreen(orb) {
         const drawAnchor = this.drawAnchor;
         const canvasCenter = this.canvasCenter;
-        const offScreenX = orb.position.x < drawAnchor.x - canvasCenter.x || orb.position.x > drawAnchor.x + canvasCenter;
-        const offScreenY = orb.position.y < drawAnchor.y - canvasCenter.y || orb.position.y > drawAnchor.y + canvasCenter;
+        const offScreenX = orb.position.x < drawAnchor.x - canvasCenter.x - orb.radius || orb.position.x > drawAnchor.x + canvasCenter.x + orb.radius;
+        const offScreenY = orb.position.y < drawAnchor.y - canvasCenter.y - orb.radius || orb.position.y > drawAnchor.y + canvasCenter.y + orb.radius;
         return offScreenX || offScreenY;
     }
 }

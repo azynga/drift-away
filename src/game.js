@@ -65,12 +65,13 @@ const setup3 = () => {
 setup2();
 
 const update = () => {
+    // console.log('NUMBER OF ORBS: ' + universe.orbs.length);
+    universe.view.clear();
+    universe.updatePositions();
+    universe.view.drawAll(universe.orbs);
+    updateSounds();
+
     if(!gamePaused) {
-        // console.log('NUMBER OF ORBS: ' + universe.orbs.length);
-        universe.view.clear();
-        universe.updatePositions();
-        universe.view.drawAll(universe.orbs);
-    
         if(fps) {
             setTimeout(() => {
                 requestAnimationFrame(update);

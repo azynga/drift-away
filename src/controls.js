@@ -45,7 +45,9 @@ const controls = {
         if(isPressed) {
             gamePaused = !gamePaused;
             universe.view.showControls = !universe.view.showControls;
-            update();
+            if(!gamePaused) {
+                update();
+            }
         }
     }
 }
