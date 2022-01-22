@@ -24,7 +24,7 @@ class View {
             player: 'rgba(200, 160, 230, 1)',
             star: 'rgba(250, 130, 130, 1)',
             background: 'rgba(0, 0, 34, 1)',
-            textOutline: 'rgba(150, 110, 180, 1)'
+            textOutline: function(opacity = 1) {return `rgba(150, 110, 180, ${opacity})`}
         };
         this.gridSize = 50;
         this.timeStamps = {};
@@ -125,8 +125,9 @@ class View {
         ctx.fillText('[ARROW KEYS]: BOOST', 30, 30);
         ctx.fillText('[SPACE]: ZERO GRAVITY', 30, 50);
         ctx.fillText('[SHIFT]: REVERSE GRAVITY', 30, 70);
+        ctx.fillText('[ESCAPE]: PAUSE GAME', 30, 90);
 
-        ctx.strokeStyle = this.colors.textOutline;
+        ctx.strokeStyle = this.colors.textOutline();
         ctx.font = 'bold 84px sans-serif';
         ctx.textBaseline = 'middle';
         ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
@@ -160,16 +161,18 @@ class View {
 
     drawStartScreen() {
         const ctx = this.ctx;
-        const opacity = 1 / ((this.frameCount + 0.0001) / 6) ;
+        const opacity = 10 / (this.frameCount ** 1.5 + 0.000001) ;
         ctx.fillStyle = this.colors.primary(opacity);
         
         const margin = 100;
         ctx.font = '12px sans-serif';
         ctx.textBaseline = 'alphabetic';
         ctx.textAlign = 'left';
-        ctx.fillText('[ARROW KEYS]: BOOST', margin + 12, this.canvas.height - margin - 40);
-        ctx.fillText('[SPACE]: ZERO GRAVITY', margin + 12, this.canvas.height - margin - 20);
-        ctx.fillText('[SHIFT]: REVERSE GRAVITY', margin + 12, this.canvas.height - margin);
+        ctx.fillText('[ARROW KEYS]: BOOST', margin + 12, this.canvas.height - margin - 60);
+        ctx.fillText('[SPACE]: ZERO GRAVITY', margin + 12, this.canvas.height - margin - 40);
+        ctx.fillText('[SHIFT]: REVERSE GRAVITY', margin + 12, this.canvas.height - margin - 20);
+        ctx.fillText('[ESCAPE]: PAUSE GAME', margin + 12, this.canvas.height - margin);
+
 
         ctx.font = 'bold 150px sans-serif';
         ctx.textBaseline = 'middle';
@@ -187,74 +190,75 @@ class View {
     drawInstructions() {
         const ctx = this.ctx;
         ctx.fillStyle = this.colors.primary((this.frameCount - 120) / 100);
+        ctx.strokeStyle = this.colors.textOutline((this.frameCount - 120) / 100);
         ctx.font = '30px sans-serif';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.fillText('Collect smaller stars and become the biggest.', this.canvasCenter.x, this.canvasCenter.y - 220);
+        ctx.strokeText('Collect smaller stars and become the biggest.', this.canvasCenter.x, this.canvasCenter.y - 220);
         ctx.fillText('Your boost is limited, don\'t waste it.', this.canvasCenter.x, this.canvasCenter.y - 170);
+        ctx.strokeText('Your boost is limited, don\'t waste it.', this.canvasCenter.x, this.canvasCenter.y - 170);
     }
 
-    drawWinMessage() {
+    drawWinMessage(framesSinceGameOver) {
         const ctx = this.ctx;
-        ctx.fillStyle = this.colors.primary();
-        ctx.strokeStyle = this.colors.textOutline;
+        ctx.fillStyle = this.colors.primary((framesSinceGameOver - 30) / 100);
+        ctx.strokeStyle = this.colors.textOutline((framesSinceGameOver - 30) / 100);
         ctx.font = '30px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 110);
-        ctx.strokeText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 110);
+        ctx.fillText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 210);
+        ctx.strokeText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 210);
 
-        ctx.fillText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 60);
-        ctx.strokeText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 60);
+        ctx.fillText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 160);
+        ctx.strokeText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 160);
 
-        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
-        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 160);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 160);
     }
 
-    drawLoseMessage() {
+    drawLoseMessage(framesSinceGameOver) {
         const ctx = this.ctx;
-        ctx.fillStyle = this.colors.primary();
-        ctx.strokeStyle = this.colors.textOutline;
+        ctx.fillStyle = this.colors.primary((framesSinceGameOver - 30) / 100);
+        ctx.strokeStyle = this.colors.textOutline((framesSinceGameOver - 30) / 100);
         ctx.font = '30px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         if(player.isAlive) {
-            ctx.fillText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 110);
-            ctx.strokeText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 110);
+            ctx.fillText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 210);
+            ctx.strokeText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 210);
 
-            ctx.fillText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 60);
-            ctx.strokeText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 60);
+            ctx.fillText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 160);
+            ctx.strokeText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 160);
         } else {
-            ctx.fillText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 110);
-            ctx.strokeText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 110);
+            ctx.fillText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 210);
+            ctx.strokeText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 210);
 
-            ctx.fillText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 60);
-            ctx.strokeText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 60);
+            ctx.fillText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 160);
+            ctx.strokeText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 160);
         }
 
-        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
-        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 160);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 160);
     }
 
     drawAll(orbsArray) {
         const ctx = this.ctx;
         
         if(gamePaused) {
-            // ctx.filter = 'blur(5px)';
             this.drawBatch(orbsArray);
             this.drawPauseScreen();
-            // ctx.filter = 'none';
         } else {
             this.drawBackground();
+            this.drawBatch(orbsArray);
             if(this.frameCount > 60 * 2 && this.frameCount < 60 * 8 && !gameOver) {
                 this.drawInstructions();
             }
-            this.drawBatch(orbsArray);
             this.drawFuelDisplay();
             if(gameOver) {
                 const framesSinceGameOver = this.frameCount - this.timeStamps.gameOver;
-                gameWon ? this.drawWinMessage() : this.drawLoseMessage();
+                gameWon ? this.drawWinMessage(framesSinceGameOver) : this.drawLoseMessage(framesSinceGameOver);
             }
             if(this.frameCount < 900) {
                 this.drawStartScreen();
