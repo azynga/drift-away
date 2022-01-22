@@ -53,15 +53,15 @@ class Universe {
 
     getBiggestOrb() {
         const biggestOrb = this.orbs.reduce((currentBiggest, current) => {
-            return currentBiggest.mass > current.mass ? currentBiggest : current;
+            return currentBiggest.volume > current.volume ? currentBiggest : current;
         })
         return biggestOrb;
     }
 
-    getTotalOrbMass() {
-        const totalMass = this.orbs.reduce((total, currentOrb) => {
-            return total + currentOrb.mass;
+    getTotalOrbVolume() {
+        const totalVolume = this.orbs.reduce((total, currentOrb) => {
+            return total + currentOrb.volume;
         }, 0);
-        return totalMass;
+        return totalVolume;
     }
 };

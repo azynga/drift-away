@@ -18,9 +18,10 @@ const fps = universe.view.fps;
 
 let gameStarted = false;
 let gamePaused = false;
+let gameOver = false;
 let gameWon = false;
 let gameLost = false;
-let respawnOn = true;
+let respawnOn = false;
 
 player.velocity = {x: 1.3, y: 0};
 
@@ -73,10 +74,6 @@ const startGame = () => {
 
 window.addEventListener('click', startGame);
 
-let biggestOrb = {};
-let totalMass = 0;
-let massOutsideBiggest = 0;
-
 const update = () => {
     universe.view.clear();
     universe.updatePositions();
@@ -85,16 +82,26 @@ const update = () => {
 
     if(gameStarted) {
         universe.view.frameCount ++;
+    };
+    
+    const biggestOrb = universe.getBiggestOrb();
+    const totalVolume = universe.getTotalOrbVolume();
+    const volumeOutsideBiggest = totalVolume - biggestOrb.volume;
+    
+    if(gameStarted && !gameOver) {
+        respawnOn = biggestOrb.radius < 100;
+        if(biggestOrb === player && volumeOutsideBiggest < player.volume) {
+            gameWon = true;
+        } else if(!respawnOn && biggestOrb !== player && volumeOutsideBiggest < biggestOrb.volume || !player.isAlive) {
+            gameLost = true;
+        };
+        gameOver = gameWon || gameLost;
+        if(gameOver) {
+            universe.view.timeStamps.gameOver = universe.view.frameCount;
+            respawnOn = false;
+        }
     }
-    
-    biggestOrb = universe.getBiggestOrb();
-    totalMass = universe.getTotalOrbMass();
-    massOutsideBiggest = totalMass - biggestOrb.mass;
 
-    respawnOn = !gameLost && !gameWon && biggestOrb.radius < 100 && gameStarted;
-    gameWon = biggestOrb === player && massOutsideBiggest < player.mass && gameStarted;
-    gameLost = (!respawnOn && biggestOrb !== player && massOutsideBiggest < biggestOrb.mass || !player.isAlive) && gameStarted;
-    
     if(respawnOn && universe.orbs.length < 100) {
         universe.orbs.push(new Star(...universe.generateStarProperties(
             player.position, // center position

@@ -24,9 +24,10 @@ class View {
             player: 'rgba(200, 160, 230, 1)',
             star: 'rgba(250, 130, 130, 1)',
             background: 'rgba(0, 0, 34, 1)',
-            textOutline: 'rgba(180, 140, 210, 1)'
+            textOutline: 'rgba(150, 110, 180, 1)'
         };
         this.gridSize = 50;
+        this.timeStamps = {};
     }
 
     clear() {
@@ -200,14 +201,14 @@ class View {
         ctx.font = '30px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 220);
-        ctx.strokeText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 220);
+        ctx.fillText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 110);
+        ctx.strokeText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 110);
 
-        ctx.fillText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 170);
-        ctx.strokeText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 170);
+        ctx.fillText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 60);
+        ctx.strokeText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 60);
 
-        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
-        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
     }
 
     drawLoseMessage() {
@@ -217,14 +218,23 @@ class View {
         ctx.font = '30px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 220);
-        ctx.strokeText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 220);
 
-        ctx.fillText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 170);
-        ctx.strokeText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 170);
+        if(player.isAlive) {
+            ctx.fillText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 110);
+            ctx.strokeText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 110);
 
-        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
-        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+            ctx.fillText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 60);
+            ctx.strokeText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 60);
+        } else {
+            ctx.fillText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 110);
+            ctx.strokeText('You helped another star become bigger.', this.canvasCenter.x, this.canvasCenter.y - 110);
+
+            ctx.fillText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 60);
+            ctx.strokeText('That\'s nice.', this.canvasCenter.x, this.canvasCenter.y - 60);
+        }
+
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 110);
     }
 
     drawAll(orbsArray) {
@@ -237,15 +247,14 @@ class View {
             // ctx.filter = 'none';
         } else {
             this.drawBackground();
-            if(this.frameCount > 60 * 2 && this.frameCount < 60 * 8) {
+            if(this.frameCount > 60 * 2 && this.frameCount < 60 * 8 && !gameOver) {
                 this.drawInstructions();
             }
             this.drawBatch(orbsArray);
             this.drawFuelDisplay();
-            if(gameWon) {
-                this.drawWinMessage();
-            } else if(gameLost) {
-                this.drawLoseMessage();
+            if(gameOver) {
+                const framesSinceGameOver = this.frameCount - this.timeStamps.gameOver;
+                gameWon ? this.drawWinMessage() : this.drawLoseMessage();
             }
             if(this.frameCount < 900) {
                 this.drawStartScreen();

@@ -52,24 +52,16 @@ const controls = {
     }
 }
 
-const keys = {};
-
 document.addEventListener('keydown', event => {
     const pressedKey = event.key;
-    keys[pressedKey] = true;
-    for(let key in keys) {
-        if(gameStarted && key in controls && keys[key] === true) {
-            controls[key](true);
-        }
+    if(pressedKey in controls && gameStarted) {
+        controls[pressedKey](true);
     }
 })
 
 document.addEventListener('keyup', event => {
     const releasedKey = event.key;
-    keys[releasedKey] = false;
-    for (let key in keys) {
-        if(key in controls && keys[key] === false) {
-            controls[key](false);
-        }
+    if(releasedKey in controls && gameStarted) {
+        controls[releasedKey](false);
     }
 })
