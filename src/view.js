@@ -23,7 +23,8 @@ class View {
             primary: function(opacity = 1) {return `rgba(200, 160, 230, ${opacity})`},
             player: 'rgba(200, 160, 230, 1)',
             star: 'rgba(250, 130, 130, 1)',
-            background: 'rgba(0, 0, 34, 1)'
+            background: 'rgba(0, 0, 34, 1)',
+            textOutline: 'rgba(180, 140, 210, 1)'
         };
         this.gridSize = 50;
     }
@@ -113,7 +114,7 @@ class View {
         ctx.closePath();
     }
 
-    drawControls() {
+    drawPauseScreen() {
         const ctx = this.ctx;
     
         ctx.fillStyle = this.colors.primary(1);
@@ -124,9 +125,11 @@ class View {
         ctx.fillText('[SPACE]: ZERO GRAVITY', 30, 50);
         ctx.fillText('[SHIFT]: REVERSE GRAVITY', 30, 70);
 
+        ctx.strokeStyle = this.colors.textOutline;
         ctx.font = 'bold 84px sans-serif';
         ctx.textBaseline = 'middle';
         ctx.fillText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
+        ctx.strokeText('GAME PAUSED', 30, this.canvasCenter.y, this.canvas.width - 60);
     }
 
     drawFuelDisplay() {
@@ -190,13 +193,47 @@ class View {
         ctx.fillText('Your boost is limited, don\'t waste it.', this.canvasCenter.x, this.canvasCenter.y - 170);
     }
 
+    drawWinMessage() {
+        const ctx = this.ctx;
+        ctx.fillStyle = this.colors.primary();
+        ctx.strokeStyle = this.colors.textOutline;
+        ctx.font = '30px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 220);
+        ctx.strokeText('You are the biggest now.', this.canvasCenter.x, this.canvasCenter.y - 220);
+
+        ctx.fillText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 170);
+        ctx.strokeText('Nobody can take that away from you.', this.canvasCenter.x, this.canvasCenter.y - 170);
+
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+    }
+
+    drawLoseMessage() {
+        const ctx = this.ctx;
+        ctx.fillStyle = this.colors.primary();
+        ctx.strokeStyle = this.colors.textOutline;
+        ctx.font = '30px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 220);
+        ctx.strokeText('You can\'t become the biggest anymore.', this.canvasCenter.x, this.canvasCenter.y - 220);
+
+        ctx.fillText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 170);
+        ctx.strokeText('That\'s okay.', this.canvasCenter.x, this.canvasCenter.y - 170);
+
+        ctx.fillText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+        ctx.strokeText('Thank you for playing.', this.canvasCenter.x, this.canvasCenter.y + 170);
+    }
+
     drawAll(orbsArray) {
         const ctx = this.ctx;
         
         if(gamePaused) {
             // ctx.filter = 'blur(5px)';
             this.drawBatch(orbsArray);
-            this.drawControls();
+            this.drawPauseScreen();
             // ctx.filter = 'none';
         } else {
             this.drawBackground();
@@ -205,7 +242,12 @@ class View {
             }
             this.drawBatch(orbsArray);
             this.drawFuelDisplay();
-            if(this.frameCount < 300) {
+            if(gameWon) {
+                this.drawWinMessage();
+            } else if(gameLost) {
+                this.drawLoseMessage();
+            }
+            if(this.frameCount < 900) {
                 this.drawStartScreen();
             }
         }

@@ -11,12 +11,6 @@ class Universe {
         this.player = player;
     }
 
-    // addStars(numberOfStars) {
-    //     for(let i = 0; i < numberOfStars; i ++) {
-    //         this.orbs.push()
-    //     }
-    // }
-
     generateStarProperties(center, areaWidth = this.size.x + 2000, areaHeight = this.size.y + 2000, maxRadius, maxDensity, spawnOffScreen) {
         const startPosition = {
             x: center.x + (Math.random() - 0.5) * areaWidth,
@@ -55,5 +49,19 @@ class Universe {
             player.trailParticles.pop();
         }
         this.orbs.forEach(orb => orb.setNextCoordinates());
+    }
+
+    getBiggestOrb() {
+        const biggestOrb = this.orbs.reduce((currentBiggest, current) => {
+            return currentBiggest.mass > current.mass ? currentBiggest : current;
+        })
+        return biggestOrb;
+    }
+
+    getTotalOrbMass() {
+        const totalMass = this.orbs.reduce((total, currentOrb) => {
+            return total + currentOrb.mass;
+        }, 0);
+        return totalMass;
     }
 };

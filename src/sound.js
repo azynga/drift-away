@@ -2,15 +2,18 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 audioCtx.suspend();
 const backgroundMusicElement = document.querySelector('audio');
+// const backgroundMusicElement = new Audio();
+// backgroundMusicElement.src = '../sound/music-loop.mp3';
+// backgroundMusicElement.crossOrigin = 'anonymous';
 const backgroundMusicNode = audioCtx.createMediaElementSource(backgroundMusicElement);
 backgroundMusicElement.loop = true;
 
 // create a sequence of white noise
 const whiteNoiseBuffer = audioCtx.createBuffer(1, 2 * 44100, 44100);
-whiteNoiseBuffer.copyToChannel(whiteNoiseBuffer.getChannelData(0).map(() => {
-        return Math.random();
-    }), 0
-);
+const whiteNoiseData = whiteNoiseBuffer.getChannelData(0);
+for (let i = 0; i < whiteNoiseBuffer.length; i ++) {
+    whiteNoiseData[i] = Math.random() * 2 - 1;
+}
 const whiteNoiseNode = audioCtx.createBufferSource();
 whiteNoiseNode.buffer = whiteNoiseBuffer;
 whiteNoiseNode.loop = true;
@@ -53,10 +56,10 @@ const updateSounds = () => {
         // change sounds depending on gravity
         const gravity = player.getTotalGravitationalPull().sum;
         const mass = player.mass;
-        const musicCutoff = 150 + (gravity / mass * 2) * 50000;
+        const musicCutoff = 150 + (gravity / mass) * 100000;
         const noiseCutoff = 150 + (gravity / mass) * 50000;
         musicLowPass.frequency.exponentialRampToValueAtTime(musicCutoff, 1/60);
         noiseLowPass.frequency.exponentialRampToValueAtTime(noiseCutoff, 1/60);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001 + gravity / mass, 1/60);
+        noiseGain.gain.exponentialRampToValueAtTime(0.02 + (gravity / mass ** 2), 1/60);
     }
 };

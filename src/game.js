@@ -13,21 +13,16 @@ const universe = new Universe(
     )
 );
 
-// console.dir(window.localStorage);
-
 const player = universe.orbs[0];
-const firstStar = universe.orbs[1];
 const fps = universe.view.fps;
+
 let gameStarted = false;
 let gamePaused = false;
-player.velocity = {x: 1.3, y: 0};
+let gameWon = false;
+let gameLost = false;
+let respawnOn = true;
 
-// universe.orbs.push(new Star(
-//     {x: 100000, y: 0},
-//     80,
-//     10,
-//     true
-// ))
+player.velocity = {x: 1.3, y: 0};
 
 const setup1 = () => {
     for(let i = 0; i < 100; i ++) {
@@ -37,20 +32,20 @@ const setup1 = () => {
             10000, // spread height
             80, // max radius
             10, // max density
-            true
+            true // spawn off screen
         )));
     }
 }
 
 const setup2 = () => {
-    for(let i = 0; i < 300; i ++) {
+    for(let i = 0; i < 200; i ++) {
         universe.orbs.push(new Star(...universe.generateStarProperties(
             { x: 0, y: 0 }, // center position
             6000, // spread width
             3000, // spread height
             10, // max radius
             1, // max density
-            true
+            true // spawn off screen
         )));
     }
 }
@@ -63,7 +58,7 @@ const setup3 = () => {
             undefined, // spread height
             100, // max radius
             3, // max density
-            true
+            true // spawn off screen
         )));
     }
 }
@@ -78,16 +73,40 @@ const startGame = () => {
 
 window.addEventListener('click', startGame);
 
+let biggestOrb = {};
+let totalMass = 0;
+let massOutsideBiggest = 0;
+
 const update = () => {
-    // console.log('NUMBER OF ORBS: ' + universe.orbs.length);
     universe.view.clear();
     universe.updatePositions();
     universe.view.drawAll(universe.orbs);
     updateSounds();
+
     if(gameStarted) {
         universe.view.frameCount ++;
     }
+    
+    biggestOrb = universe.getBiggestOrb();
+    totalMass = universe.getTotalOrbMass();
+    massOutsideBiggest = totalMass - biggestOrb.mass;
 
+    respawnOn = !gameLost && !gameWon && biggestOrb.radius < 100 && gameStarted;
+    gameWon = biggestOrb === player && massOutsideBiggest < player.mass && gameStarted;
+    gameLost = (!respawnOn && biggestOrb !== player && massOutsideBiggest < biggestOrb.mass || !player.isAlive) && gameStarted;
+    
+    if(respawnOn && universe.orbs.length < 100) {
+        universe.orbs.push(new Star(...universe.generateStarProperties(
+            player.position, // center position
+            6000, // spread width
+            3000, // spread height
+            20, // max radius
+            1, // max density
+            true // spawn off screen
+        )));
+        console.log('New orb added')
+    }
+    
     if(!gamePaused) {
         if(fps) {
             setTimeout(() => {
