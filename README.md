@@ -1,4 +1,4 @@
-The first project of the Ironhack Web Development Bootcamp.
+The first project of the Ironhack Web Development Bootcamp.  
 Made by Aljoscha Zynga
 
 # Drift Away
