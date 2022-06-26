@@ -9,3 +9,6 @@ https://azynga.github.io/drift-away/
 ![screenshot](./screenshot-01.png)
 
 ![screenshot](./screenshot-02.png)
+
+Music by Frankum & Frankumjay
+available on [freesound.org](https://freesound.org/s/393520/)
